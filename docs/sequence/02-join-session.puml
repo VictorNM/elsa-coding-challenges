@@ -1,0 +1,33 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+participant User
+participant APIGateway as "API Gateway"
+box "Core"
+    participant CoreAPI as "Core API"
+    participant QuizSession
+    participant EventBus
+end box
+
+User -> APIGateway: Join session
+APIGateway -> CoreAPI: Join session
+CoreAPI -> QuizSession: Join session
+QuizSession -> QuizSession: Register user
+QuizSession --> CoreAPI: Response
+CoreAPI --> APIGateway: Response
+APIGateway --> User: Response
+QuizSession -> QuizSession: Start session
+QuizSession -> EventBus: Publish events: SessionStarted
+loop
+    QuizSession -> QuizSession: Process session
+    QuizSession -> EventBus: Publish events:\nQuestionStarted, QuestionEnded...
+end
+QuizSession -> QuizSession: End session
+QuizSession -> EventBus: Publish events: SessionEnded
+EventBus --> CoreAPI: Dispatch events
+CoreAPI -> PubSub: Publish events
+PubSub --> APIGateway: Dispatch events
+APIGateway --> User: Send updated data
+@enduml

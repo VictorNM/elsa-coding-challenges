@@ -1,0 +1,105 @@
+syntax = "proto3";
+package equiz.v1;
+
+import "google/protobuf/timestamp.proto";
+
+message Session {
+  string session_id = 1;
+  string quiz_master = 2;
+  repeated string question_ids = 3;
+}
+
+message Question {
+  string question_id = 1;
+  string question_text = 2;
+  repeated Option options = 3;
+}
+
+message Option {
+  string option_id = 1;
+  string option_text = 2;
+}
+
+message CreateSessionRequest {
+  // request_id is a unique identifier for the request, it is used for idempotency.
+  // validation: optional
+  string request_id = 1;
+  // quiz_master is the username of the user creating the quiz session
+  // validation: required
+  string quiz_master = 2;
+  // question_ids is the list of unique identifiers for the questions in the quiz session
+  // validation: required,unique,min=1,max=100,dive,required
+  repeated string question_ids = 3;
+}
+
+message CreateSessionResponse {
+  Session session = 1;
+}
+
+message StartSessionRequest {}
+
+message StartSessionResponse {}
+
+message EndSessionRequest {
+  // request_id is a unique identifier for the request, it is used for idempotency
+  string request_id = 1;
+  // session_id is the unique identifier for the quiz session
+  string session_id = 2;
+}
+
+message EndSessionResponse {}
+
+message GetCurrentQuestionRequest {}
+
+message GetCurrentQuestionResponse {}
+
+message SubmitAnswerRequest {
+  // request_id is a unique identifier for the request, it is used for idempotency
+  string request_id = 1;
+  // session_id is the unique identifier for the quiz session
+  string session_id = 2;
+  // username is the username of the user submitting the answer
+  string username = 3;
+  // question_id is the unique identifier for the question within the quiz session
+  string question_id = 4;
+  // answer is the answer submitted by the user
+  string answer = 5;
+  // submit_time is the time at which the answer was submitted
+  google.protobuf.Timestamp submit_time = 6;
+}
+
+message SubmitAnswerResponse {
+  // score is the score awarded to the user for the answer submitted
+  double score = 1;
+  // total_score is the total score of the user in the quiz session
+  double total_score = 2;
+}
+message GetLeaderboardRequest {
+  string session_id = 1;
+}
+
+message GetLeaderboardResponse {
+  Leaderboard leaderboard = 1;
+}
+
+message Leaderboard {
+  string session_id = 1;
+  repeated LeaderboardEntry entries = 2;
+}
+
+message LeaderboardEntry {
+  string username = 1;
+  double score = 2;
+}
+
+service QuizService {
+  // CreateSession a new session, this API is expected to be called by the quiz master.
+  // If this API returns a successful response, the session is created with all the required questions.
+  rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
+  rpc StartSession(StartSessionRequest) returns (StartSessionResponse);
+  rpc EndSession(EndSessionRequest) returns (EndSessionResponse);
+  rpc GetCurrentQuestion(GetCurrentQuestionRequest) returns (GetCurrentQuestionResponse);
+  rpc SubmitAnswer(SubmitAnswerRequest) returns (SubmitAnswerResponse);
+
+  rpc GetLeaderboard(GetLeaderboardRequest) returns (GetLeaderboardResponse);
+}

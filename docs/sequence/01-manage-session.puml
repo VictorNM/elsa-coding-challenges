@@ -1,0 +1,36 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+participant QuizMaster
+participant APIGateway as "API Gateway"
+box "Core"
+    participant CoreAPI as "Core API"
+    participant QuizSession
+    participant EventBus
+end box
+
+QuizMaster -> APIGateway: Create session
+APIGateway -> CoreAPI: Create session
+CoreAPI -> QuizSession: Create session
+QuizSession -> QuizSession: Create session
+QuizSession --> CoreAPI: Response
+CoreAPI --> APIGateway: Response
+APIGateway --> QuizMaster: Response
+QuizMaster -> QuizSession: Start session
+QuizSession -> EventBus: Publish events: SessionStarted
+loop
+    QuizMaster -> QuizSession: Start question
+    QuizSession -> QuizSession: Start question
+    QuizSession -> EventBus: Publish QuestionStarted
+    QuizSession --> APIGateway: Response
+    QuizMaster -> QuizSession: End question
+    QuizSession -> QuizSession: End question
+    QuizSession -> EventBus: Publish QuestionEnded
+    QuizSession --> APIGateway: Response
+end
+QuizMaster -> QuizSession: End session
+QuizSession -> EventBus: Publish events: SessionEnded
+QuizSession --> APIGateway: Response
+@enduml

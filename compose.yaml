@@ -1,0 +1,30 @@
+services:
+  equiz:
+    container_name: equiz
+    build: .
+    environment:
+      - CONFIG_PATH=config/local.yaml
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    depends_on:
+      - redis
+      - postgres
+    restart: always
+  redis:
+    image: redis:alpine
+    container_name: redis
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - '6379:6379'
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./devstack/postgres/:/docker-entrypoint-initdb.d/

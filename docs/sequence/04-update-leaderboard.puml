@@ -1,0 +1,37 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+autonumber
+
+participant User
+participant APIGateway as "API Gateway"
+box "Core"
+    participant CoreAPI as "Core API"
+    participant QuizSession
+    participant Score
+    participant Leaderboard
+    participant EventBus
+end box
+
+loop
+    Score -> EventBus: Publish events: ScoreUpdated
+    QuizSession -> EventBus: Publish events: QuestionEnded
+    EventBus --> Leaderboard: Dispatch ScoreUpdated / QuestionEnded
+    Leaderboard -> Leaderboard: Update leaderboard
+    Leaderboard -> EventBus: Publish events: LeaderboardUpdated
+    EventBus --> CoreAPI: Dispatch LeaderboardUpdated
+    CoreAPI -> PubSub: Publish LeaderboardUpdated
+    PubSub --> APIGateway: Dispatch LeaderboardUpdated
+    APIGateway --> User: Show updated leaderboard
+end
+QuizSession -> EventBus: Publish events: SessionEnded
+EventBus --> Leaderboard: Dispatch SessionEnded
+Leaderboard -> Score: List scores
+Score --> Leaderboard: Response
+Leaderboard -> Leaderboard: Update leaderboard
+Leaderboard -> EventBus: Publish events: LeaderboardUpdated
+EventBus --> CoreAPI: Dispatch LeaderboardUpdated
+CoreAPI -> PubSub: Publish LeaderboardUpdated
+PubSub --> APIGateway: Dispatch LeaderboardUpdated
+APIGateway --> User: Show updated leaderboard
+@enduml

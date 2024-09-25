@@ -1,0 +1,29 @@
+http:
+  port: 8080
+
+grpc:
+  port: 8081
+
+redis:
+  leaderboard:
+    addrs:
+      - redis:6379
+    pass: ""
+    prefix: "local:leaderboard"
+  pubsub:
+    addrs:
+      - redis:6379
+    pass: ""
+    prefix: "local:pubsub"
+
+postgres:
+  session:
+    addr: postgres:5432
+    user: postgres
+    pass: postgres
+    name: quiz_sessions
+  score:
+    addr: postgres:5432
+    user: postgres
+    pass: postgres
+    name: quiz_scores
